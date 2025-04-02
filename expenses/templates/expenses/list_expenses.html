@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Your Expenses</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base styles */
+        :root {
+            --primary: #40c9a2;
+            --primary-dark: #36b08d;
+            --secondary: #e0f5f0;
+            --text-dark: #333;
+            --text-light: #fff;
+            --muted: #6c757d;
+            --border: #dee2e6;
+            --radius: 0.5rem;
+
+            /* Category colors */
+            --color-food: #fff2e0;
+            --color-food-text: #9a5700;
+            --color-transport: #e1f0ff;
+            --color-transport-text: #0058a3;
+            --color-entertainment: #f3e5fc;
+            --color-entertainment-text: #5f2580;
+            --color-shopping: #ffe5f0;
+            --color-shopping-text: #a3004e;
+            --color-bills: #ffe5e5;
+            --color-bills-text: #a30000;
+            --color-health: #e5ffed;
+            --color-health-text: #006e25;
+            --color-other: #f5f5f5;
+            --color-other-text: #555;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: #f9fafb;
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .expense-header {
+            background: linear-gradient(to right, hsl(162, 47%, 50%), hsl(176, 56%, 45%));
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .expense-header h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .expense-header p {
+            opacity: 0.9;
+        }
+
+        /* Filter card styles */
+        .filter-card {
+            background-color: rgba(224, 245, 240, 0.5);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1 1 200px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-group .input-wrapper {
+            position: relative;
+        }
+
+        .form-group .input-wrapper i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .form-control.with-icon {
+            padding-left: 2.25rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Button styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-danger {
+            color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        /* Table styles */
+        .card {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: hsl(176, 56%, 95%);
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        tr:nth-child(even) {
+            background-color: hsl(176, 56%, 98%);
+        }
+
+        tr:hover {
+            background-color: hsl(176, 56%, 92%);
+            transition: all 0.2s ease;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .category-FOOD {
+            background-color: var(--color-food);
+            color: var(--color-food-text);
+        }
+
+        .category-TRANSPORT {
+            background-color: var(--color-transport);
+            color: var(--color-transport-text);
+        }
+
+        .category-ENTERTAINMENT {
+            background-color: var(--color-entertainment);
+            color: var(--color-entertainment-text);
+        }
+
+        .category-SHOPPING {
+            background-color: var(--color-shopping);
+            color: var(--color-shopping-text);
+        }
+
+        .category-BILLS {
+            background-color: var(--color-bills);
+            color: var(--color-bills-text);
+        }
+
+        .category-HEALTH {
+            background-color: var(--color-health);
+            color: var(--color-health-text);
+        }
+
+        .category-OTHER {
+            background-color: var(--color-other);
+            color: var(--color-other-text);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background-color: transparent;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .font-medium {
+            font-weight: 500;
+        }
+
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 1rem;
+            text-align: center;
+        }
+
+        .empty-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            background-color: #f1f5f9;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+        }
+
+        .empty-icon i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .actions {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .expense-header {
+                padding: 1rem;
+            }
+            
+            .filter-form {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .form-group {
+                flex: 1 1 100%;
+            }
+            
+            .btn-group {
+                width: 100%;
+            }
+            
+            .btn {
+                flex: 1;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="expense-header">
+            <h1>Your Expenses</h1>
+            <p>Track, manage, and analyze all your spending in one place</p>
+        </div>
+        
+        <!-- Filtering & Search Form -->
+        <div class="filter-card">
+            <form method="GET" class="filter-form">
+                <div class="form-group">
+                    <label for="category">Filter by Category</label>
+                    <select name="category" id="category" class="form-control">
+                        <option value="">All Categories</option>
+                        {% for key, value in category_choices %}
+                            <option value="{{ key }}" {% if request.GET.category == key %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Filter by Date</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-calendar"></i>
+                        <input type="date" name="date" id="date" class="form-control with-icon" value="{{ request.GET.date }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="search">Search</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" id="search" class="form-control with-icon" placeholder="Search by title or description" value="{{ request.GET.search }}">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    {% if request.GET.category or request.GET.date or request.GET.search %}
+                        <a href="{% url 'list_expenses' %}" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Reset
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        <div class="card">
+            {% if expenses %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th class="text-right">Amount</th>
+                                <th>Description</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                                <tr>
+                                    <td>{{ expense.date }}</td>
+                                    <td class="font-medium">{{ expense.title }}</td>
+                                    <td>
+                                        <span class="category-badge category-{{ expense.category }}">
+                                            {{ expense.get_category_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right font-medium">${{ expense.amount }}</td>
+                                    <td class="truncate">{{ expense.description }}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'edit_expense' expense.id %}" class="btn-icon" title="Edit">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </a>
+                                            <a href="{% url 'delete_expense' expense.id %}" class="btn-icon btn-danger" title="Delete">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <h3 class="font-medium text-lg">No expenses found</h3>
+                    <p class="text-muted">Try adjusting your filters or create a new expense to get started.</p>
+                    <a href="{% url 'add_expense' %}" class="btn btn-primary">Add Your First Expense</a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="actions">
+            <a href="{% url 'add_expense' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Expense
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-chart-line"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Expense Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Base colors */
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 240 10% 3.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --accent: 240 4.8% 95.9%;
+            --accent-foreground: 240 5.9% 10%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0.5rem;
+            --warning: 38 92% 50%;
+            --warning-foreground: 48 96% 89%;
+            --success: 142 71% 45%;
+            --success-foreground: 210 40% 98%;
+            
+            /* Sidebar specific */
+            --sidebar-background: 240 10% 3.9%;
+            --sidebar-foreground: 0 0% 98%;
+            --sidebar-primary: 0 0% 98%;
+            --sidebar-primary-foreground: 240 5.9% 10%;
+            --sidebar-accent: 240 3.7% 15.9%;
+            --sidebar-accent-foreground: 0 0% 98%;
+            --sidebar-border: 240 3.7% 15.9%;
+            --sidebar-ring: 221.2 83.2% 53.3%;
+            
+            /* Sizing */
+            --sidebar-width: 16rem;
+            --sidebar-width-collapsed: 4rem;
+        }
+
+        .dark {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 240 10% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --accent: 240 3.7% 15.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 221.2 83.2% 53.3%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            border-color: hsl(var(--border));
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: hsl(var(--muted) / 0.4);
+            color: hsl(var(--foreground));
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: hsl(var(--sidebar-background));
+            color: hsl(var(--sidebar-foreground));
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 50;
+            transition: transform 0.3s ease, width 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-width-collapsed);
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid hsl(var(--sidebar-border));
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: hsl(var(--sidebar-foreground));
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-brand-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            color: hsl(var(--sidebar-foreground));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.25rem;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: hsl(var(--sidebar-accent));
+        }
+
+        .sidebar-content {
+            padding: 1rem 0;
+            overflow-y: auto;
+            height: calc(100vh - 4rem - 4rem); /* Subtract header and footer height */
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0 0.5rem;
+        }
+
+        .sidebar-menu-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-menu-button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: transparent;
+            color: hsl(var(--sidebar-foreground));
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-menu-button:hover {
+            background-color: hsl(var(--sidebar-accent));
+        }
+
+        .sidebar-menu-button.active {
+            background-color: hsl(var(--sidebar-accent));
+            font-weight: 500;
+        }
+
+        .sidebar-menu-button-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-menu-button-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 0.5rem;
+            border-top: 1px solid hsl(var(--sidebar-border));
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-width-collapsed);
+            width: calc(100% - var(--sidebar-width-collapsed));
+        }
+
+        .dashboard {
+            padding: 1.5rem;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-header {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        .dashboard-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .dashboard-subtitle {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .charts-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .charts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Card */
+        .card {
+            background-color: hsl(var(--card));
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.25rem 0.5rem 1.25rem;
+        }
+
+        .card-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .card-description {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .card-content {
+            padding: 1.25rem;
+        }
+
+        /* Expense Summary */
+        .expense-total {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .expense-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .trend-up {
+            color: hsl(var(--success));
+        }
+
+        .trend-down {
+            color: hsl(var(--destructive));
+        }
+
+        /* Budget Progress */
+        .budget-item {
+            margin-bottom: 1rem;
+        }
+
+        .budget-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .budget-category {
+            font-weight: 500;
+        }
+
+        .budget-amount {
+            color: hsl(var(--muted-foreground));
+        }
+
+        .progress-bar {
+            height: 0.5rem;
+            background-color: hsl(var(--secondary));
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-value {
+            height: 100%;
+            border-radius: 9999px;
+        }
+
+        .progress-low {
+            background-color: hsl(var(--success));
+        }
+
+        .progress-medium {
+            background-color: hsl(var(--warning));
+        }
+
+        .progress-high {
+            background-color: hsl(var(--destructive));
+        }
+
+        /* Recent Expenses */
+        .expenses-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expense-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .expense-description {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .expense-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-badge {
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .badge-food {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: rgb(22, 101, 52);
+        }
+
+        .badge-housing {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: rgb(30, 64, 175);
+        }
+
+        .badge-transportation {
+            background-color: rgba(234, 179, 8, 0.2);
+            color: rgb(161, 98, 7);
+        }
+
+        .badge-entertainment {
+            background-color: rgba(168, 85, 247, 0.2);
+            color: rgb(107, 33, 168);
+        }
+
+        .badge-utilities {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: rgb(153, 27, 27);
+        }
+
+        .badge-other {
+            background-color: rgba(107, 114, 128, 0.2);
+            color: rgb(55, 65, 81);
+        }
+
+        .expense-date {
+            font-size: 0.75rem;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .expense-amount {
+            font-weight: 600;
+        }
+
+        /* Charts */
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            position: relative;
+        }
+
+        /* Button */
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            line-height: 1;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .button-outline {
+            background-color: transparent;
+            border: 1px solid hsl(var(--border));
+            color: hsl(var(--foreground));
+        }
+
+        .button-outline:hover {
+            background-color: hsl(var(--accent));
+            color: hsl(var(--accent-foreground));
+        }
+
+        .button-icon {
+            margin-right: 0.5rem;
+        }
+
+        /* Font Awesome Icons */
+        .fa-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-menu-button .fa-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 767px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .main-content.expanded {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .mobile-sidebar-toggle {
+                display: block;
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 40;
+                background-color: hsl(var(--background));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                width: 2.5rem;
+                height: 2.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+            
+            .dashboard {
+                padding-top: 4rem;
+            }
+            
+            .button-add-expense {
+                display: none;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .mobile-sidebar-toggle {
+                display: none;
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: hsl(var(--muted-foreground) / 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: hsl(var(--muted-foreground) / 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Sidebar Toggle -->
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="sidebar-brand">
+                <i class="fas fa-dollar-sign"></i>
+                <span class="sidebar-brand-text">ExpenseTracker</span>
+            </a>
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="fas fa-columns"></i>
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button active">
+                        <i class="fas fa-home fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-plus fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Add Expense</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-credit-card fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Expenses</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-chart-pie fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Categories</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-chart-bar fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Reports</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-dollar-sign fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Budget</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-cog fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-user fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Profile</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="#" class="sidebar-menu-button">
+                        <i class="fas fa-sign-out-alt fa-icon"></i>
+                        <span class="sidebar-menu-button-text">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="dashboard">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div>
+                    <h1 class="dashboard-title">Welcome back, Alex!</h1>
+                    <p class="dashboard-subtitle">Here's an overview of your expenses and budget status.</p>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="button button-outline button-add-expense">
+                        <i class="fas fa-plus button-icon"></i>
+                        Add Expense
+                    </button>
+                    <div class="avatar">A</div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="cards-grid">
+                <!-- Expense Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-row">
+                            <h2 class="card-title">Total Expenses</h2>
+                            <i class="fas fa-dollar-sign" style="font-size: 0.875rem; color: hsl(var(--muted-foreground));"></i>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="expense-total">$2,458.75</div>
+                        <div class="expense-trend">
+                            <i class="fas fa-arrow-up trend-up" style="margin-right: 0.25rem;"></i>
+                            <span class="trend-up">+17.1%</span>
+                            <span>&nbsp;from last month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Progress -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Budget Status</h2>
+                        <p class="card-description">Track your spending against budget limits</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="budget-item">
+                            <div class="budget-header">
+                                <span class="budget-category">Food</span>
+                                <span class="budget-amount">$450.25 / $500.00</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value progress-medium" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-header">
+                                <span class="budget-category">Housing</span>
+                                <span class="budget-amount">$850.00 / $900.00</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value progress-high" style="width: 94%"></div>
+                            </div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-header">
+                                <span class="budget-category">Transportation</span>
+                                <span class="budget-amount">$325.50 / $400.00</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value progress-medium" style="width: 81%"></div>
+                            </div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-header">
+                                <span class="budget-category">Entertainment</span>
+                                <span class="budget-amount">$210.75 / $300.00</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value progress-low" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Expenses -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Expenses</h2>
+                        <p class="card-description">Your latest transactions</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="expenses-list">
+                            <div class="expense-item">
+                                <div class="expense-details">
+                                    <span class="expense-description">Grocery Shopping</span>
+                                    <div class="expense-meta">
+                                        <span class="category-badge badge-food">Food</span>
+                                        <span class="expense-date">Apr 1</span>
+                                    </div>
+                                </div>
+                                <span class="expense-amount">$85.20</span>
+                            </div>
+                            <div class="expense-item">
+                                <div class="expense-details">
+                                    <span class="expense-description">Monthly Rent</span>
+                                    <div class="expense-meta">
+                                        <span class="category-badge badge-housing">Housing</span>
+                                        <span class="expense-date">Apr 1</span>
+                                    </div>
+                                </div>
+                                <span class="expense-amount">$850.00</span>
+                            </div>
+                            <div class="expense-item">
+                                <div class="expense-details">
+                                    <span class="expense-description">Gas Station</span>
+                                    <div class="expense-meta">
+                                        <span class="category-badge badge-transportation">Transportation</span>
+                                        <span class="expense-date">Mar 30</span>
+                                    </div>
+                                </div>
+                                <span class="expense-amount">$45.75</span>
+                            </div>
+                            <div class="expense-item">
+                                <div class="expense-details">
+                                    <span class="expense-description">Movie Tickets</span>
+                                    <div class="expense-meta">
+                                        <span class="category-badge badge-entertainment">Entertainment</span>
+                                        <span class="expense-date">Mar 28</span>
+                                    </div>
+                                </div>
+                                <span class="expense-amount">$32.50</span>
+                            </div>
+                            <div class="expense-item">
+                                <div class="expense-details">
+                                    <span class="expense-description">Electricity Bill</span>
+                                    <div class="expense-meta">
+                                        <span class="category-badge badge-utilities">Utilities</span>
+                                        <span class="expense-date">Mar 25</span>
+                                    </div>
+                                </div>
+                                <span class="expense-amount">$95.40</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <!-- Expenses by Category -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Expenses by Category</h2>
+                        <p class="card-description">Breakdown of your spending by category</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Expense Trends -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Monthly Expense Trends</h2>
+                        <p class="card-description">Your spending patterns over the last 6 months</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="chart-container">
+                            <canvas id="monthlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        
+        // Desktop sidebar toggle
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        });
+        
+        // Mobile sidebar toggle
+        mobileSidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && 
+                !sidebar.contains(e.target) && 
+                e.target !== mobileSidebarToggle) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+        
+        // Chart data
+        const categories = ["Food", "Housing", "Transportation", "Entertainment", "Utilities", "Other"];
+        const categoryTotals = [450.25, 850.00, 325.50, 210.75, 375.25, 247.00];
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+        const monthlyTotals = [1200, 1450, 1100, 1800, 2100, 2458.75];
+        
+        // Category Chart
+        const categoryChart = new Chart(document.getElementById('categoryChart'), {
+            type: 'pie',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: categoryTotals,
+                    backgroundColor: [
+                        'hsl(142, 71%, 45%)',  // Green
+                        'hsl(221.2, 83.2%, 53.3%)',  // Blue
+                        'hsl(38, 92%, 50%)',  // Yellow
+                        'hsl(280, 87%, 65%)',  // Purple
+                        'hsl(0, 84.2%, 60.2%)',  // Red
+                        'hsl(220, 9%, 46%)'   // Gray
+                    ],
+                    borderWidth: 1,
+                    borderColor: 'hsl(var(--background))'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            padding: 15
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Monthly Chart
+        const monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Monthly Expenses',
+                    data: monthlyTotals,
+                    backgroundColor: 'hsl(221.2, 83.2%, 53.3%, 0.8)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'hsl(var(--border) / 0.3)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
