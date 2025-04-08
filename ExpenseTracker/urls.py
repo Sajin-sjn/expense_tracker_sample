@@ -49,7 +49,7 @@ urlpatterns = [
     # Sitemap route
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
 
-    path('googleXXXXXXXXXXXX.html', TemplateView.as_view(template_name='googleXXXXXXXXXXXX.html', content_type='text/html')),
+    path('google3258ca76d67af9ee.html', TemplateView.as_view(template_name='google3258ca76d67af9ee.html', content_type='text/html')),
 
 ]
 
